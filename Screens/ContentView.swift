@@ -2,7 +2,7 @@
 See LICENSE folder for this sample’s licensing information.
 
 Abstract:
-The app's top level view that allows users to find music they want to rediscover.
+The app's top-level view that allows users to find music they want to rediscover.
 */
 
 import MusicKit
@@ -54,28 +54,28 @@ struct ContentView: View {
         }
     }
     
-    /// The top level content view.
+    /// The top-level content view.
     private var rootView: some View {
         NavigationView {
             navigationViewContents
                 .navigationTitle("Music Albums")
         }
-        .searchable("Albums", text: $searchTerm)
+        .searchable(text: $searchTerm, prompt: "Albums")
         .gesture(hiddenDevelopmentSettingsGesture)
     }
     
     // MARK: - Search results requesting
     
-    /// The current search term entered by the user.
+    /// The current search term the user enters.
     @State private var searchTerm = ""
     
-    /// Albums retrieved by MusicKit that match the current search term.
+    /// The albums the app loads using MusicKit that match the current search term.
     @State private var albums: MusicItemCollection<Album> = []
     
-    /// Recent albums retrieved by MusicKit for the current search term.
+    /// A reference to the storage object for recent albums the user previously viewed in the app.
     @StateObject private var recentAlbumsStorage = RecentAlbumsStorage.shared
     
-    /// A list of albums to be displayed below the search bar.
+    /// A list of albums to display below the search bar.
     private var searchResultsList: some View {
         List(albums.isEmpty ? recentAlbumsStorage.recentlyViewedAlbums : albums) { album in
             AlbumCell(album)
@@ -84,21 +84,21 @@ struct ContentView: View {
     
     /// Makes a new search request to MusicKit when the current search term changes.
     private func requestUpdatedSearchResults(for searchTerm: String) {
-        detach {
+        Task {
             if searchTerm.isEmpty {
-                await self.reset()
+                self.reset()
             } else {
                 do {
-                    // Issue a catalog search request for albums matching search term.
+                    // Issue a catalog search request for albums matching the search term.
                     var searchRequest = MusicCatalogSearchRequest(term: searchTerm, types: [Album.self])
                     searchRequest.limit = 5
                     let searchResponse = try await searchRequest.response()
                     
-                    // Update the user interface with search response.
-                    await self.apply(searchResponse, for: searchTerm)
+                    // Update the user interface with the search response.
+                    self.apply(searchResponse, for: searchTerm)
                 } catch {
                     print("Search request failed with error: \(error).")
-                    await self.reset()
+                    self.reset()
                 }
             }
         }
@@ -123,31 +123,29 @@ struct ContentView: View {
     /// `true` if the barcode scanning functionality is available to the user.
     @AppStorage("barcode-scanning-available") private var isBarcodeScanningAvailable = true
     
-    /// `true` if the barcode scanning view should be shown.
+    /// `true` if the content view needs to display the barcode scanning view.
     @State private var isBarcodeScanningViewPresented = false
     
-    /// A barcode scanned via the barcode scanning view.
+    /// A barcode that the barcode scanning view detects.
     @State private var detectedBarcode = ""
     
-    /// The album matching the scanned barcode, if any.
+    /// The album that matches the detected barcode, if any.
     @State private var detectedAlbum: Album?
     
-    /// `true` if the album detail view should be shown.
+    /// `true` if the content view needs to display the album detail view.
     @State private var isDetectedAlbumDetailViewActive = false
     
-    /// Searches for an album matching a scanned barcode.
+    /// Searches for an album that matches a barcode that the barcode scanning view detects.
     private func handleDetectedBarcode(_ detectedBarcode: String) {
         if detectedBarcode.isEmpty {
             self.detectedAlbum = nil
         } else {
-            detach {
+            Task {
                 do {
-                    // DEMO: Request albums matching detectedBarcode.
-                    
                     let albumsRequest = MusicCatalogResourceRequest<Album>(matching: \.upc, equalTo: detectedBarcode)
                     let albumsResponse = try await albumsRequest.response()
                     if let firstAlbum = albumsResponse.items.first {
-                        await self.handleDetectedAlbum(firstAlbum)
+                        self.handleDetectedAlbum(firstAlbum)
                     }
                 } catch {
                     print("Encountered error while trying to find albums with upc = \"\(detectedBarcode)\".")
@@ -160,10 +158,10 @@ struct ContentView: View {
     @MainActor
     private func handleDetectedAlbum(_ detectedAlbum: Album) {
         
-        // Dismiss barcode scanning view.
+        // Dismiss the barcode scanning view.
         self.isBarcodeScanningViewPresented = false
         
-        // Push album detail view for detected album.
+        // Push the album detail view for the detected album.
         self.detectedAlbum = detectedAlbum
         withAnimation {
             self.isDetectedAlbumDetailViewActive = true
@@ -171,7 +169,7 @@ struct ContentView: View {
         
     }
     
-    /// Clears the scanned barcode when the album detail view is hidden or shown.
+    /// Clears the scanned barcode when hiding or showing the album detail view.
     private func handleDetectedAlbumDetailViewActiveChange(_ isDetectedAlbumDetailViewActive: Bool) {
         if !isDetectedAlbumDetailViewActive {
             self.detectedBarcode = ""
@@ -180,10 +178,10 @@ struct ContentView: View {
     
     // MARK: - Development settings
     
-    /// `true` if the development settings view should be presented.
+    /// `true` if the content view needs to display the development settings view.
     @State var isDevelopmentSettingsViewPresented = false
     
-    /// A custom gesture used to cause the development settings view to be presented.
+    /// A custom gesture that initiates the presentation of the development settings view.
     private var hiddenDevelopmentSettingsGesture: some Gesture {
         TapGesture(count: 3).onEnded {
             isDevelopmentSettingsViewPresented = true

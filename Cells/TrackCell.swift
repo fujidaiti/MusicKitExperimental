@@ -2,13 +2,13 @@
 See LICENSE folder for this sample’s licensing information.
 
 Abstract:
-A cell view for lists of `Track`s.
+A cell view for lists of `Track` items.
 */
 
 import MusicKit
 import SwiftUI
 
-/// `TrackCell` is a view that can be used in a SwiftUI `List` to represent a `Track`.
+/// `TrackCell` is a view to use in a SwiftUI `List` to represent a `Track`.
 struct TrackCell: View {
     
     // MARK: - Object lifecycle

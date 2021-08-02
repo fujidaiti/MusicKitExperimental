@@ -2,13 +2,13 @@
 See LICENSE folder for this sample’s licensing information.
 
 Abstract:
-A cell view for lists of `MusicItem`s.
+A cell view for lists of music items.
 */
 
 import MusicKit
 import SwiftUI
 
-/// `MusicItemCell` is a view that can be used in a SwiftUI `List` to represent a `MusicItem`.
+/// `MusicItemCell` is a view to use in a SwiftUI `List` to represent a `MusicItem`.
 struct MusicItemCell: View {
     
     // MARK: - Properties

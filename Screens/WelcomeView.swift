@@ -12,9 +12,9 @@ import SwiftUI
 
 /// `WelcomeView` is a view that introduces to users the purpose of the MusicAlbums app,
 /// and demonstrates best practices for requesting user consent for an app to get access to
-/// Apple Music related data.
+/// Apple Music data.
 ///
-/// This view should be presented as a sheet using the convenience `.welcomeSheet()` modifier.
+/// Present this view as a sheet using the convenience `.welcomeSheet()` modifier.
 struct WelcomeView: View {
     
     // MARK: - Properties
@@ -27,7 +27,7 @@ struct WelcomeView: View {
     
     // MARK: - View
     
-    /// A description of the UI presented by this view.
+    /// A declaration of the UI that this view presents.
     var body: some View {
         ZStack {
             gradient
@@ -64,7 +64,7 @@ struct WelcomeView: View {
                         buttonText
                             .padding([.leading, .trailing], 10)
                     }
-                    .buttonStyle(ProminentButtonStyle())
+                    .buttonStyle(.prominent)
                     .colorScheme(.light)
                 }
             }
@@ -72,7 +72,7 @@ struct WelcomeView: View {
         }
     }
     
-    /// Constructs a gradient used as the view background.
+    /// Constructs a gradient to use as the view background.
     private var gradient: some View {
         LinearGradient(
             gradient: Gradient(colors: [
@@ -87,7 +87,7 @@ struct WelcomeView: View {
         .ignoresSafeArea()
     }
     
-    /// Provides text explaining how the app can be used, based on the authorization status.
+    /// Provides text that explains how to use the app according to the authorization status.
     private var explanatoryText: Text {
         let explanatoryText: Text
         switch musicAuthorizationStatus {
@@ -101,8 +101,8 @@ struct WelcomeView: View {
         return explanatoryText
     }
     
-    /// Provides additional text explaining how to get access to Apple Music after authorization
-    /// was previously denied.
+    /// Provides additional text that explains how to get access to Apple Music
+    /// after previously denying authorization.
     private var secondaryExplanatoryText: Text? {
         var secondaryExplanatoryText: Text?
         switch musicAuthorizationStatus {
@@ -115,7 +115,7 @@ struct WelcomeView: View {
         return secondaryExplanatoryText
     }
     
-    /// A button that the user taps to continue using the app, according to the current
+    /// A button that the user taps to continue using the app according to the current
     /// authorization status.
     private var buttonText: Text {
         let buttonText: Text
@@ -132,11 +132,11 @@ struct WelcomeView: View {
     
     // MARK: - Methods
     
-    /// Allows the user to authorize Apple Music usage, when the Continue/Open Setting button is tapped.
+    /// Allows the user to authorize Apple Music usage when tapping the Continue/Open Setting button.
     private func handleButtonPressed() {
         switch musicAuthorizationStatus {
             case .notDetermined:
-                detach {
+                Task {
                     let musicAuthorizationStatus = await MusicAuthorization.request()
                     await update(with: musicAuthorizationStatus)
                 }
@@ -159,7 +159,7 @@ struct WelcomeView: View {
     
     // MARK: - Presentation coordinator
     
-    /// A presentation coordinator used in conjuction with `SheetPresentationModifier`.
+    /// A presentation coordinator to use in conjuction with `SheetPresentationModifier`.
     class PresentationCoordinator: ObservableObject {
         static let shared = PresentationCoordinator()
         
@@ -196,7 +196,7 @@ struct WelcomeView: View {
 
 // MARK: - View extension
 
-/// Allows the `welcomeSheet` view modifier to be added to the top level view.
+/// Allows the addition of the`welcomeSheet` view modifier to the top-level view.
 extension View {
     func welcomeSheet() -> some View {
         modifier(WelcomeView.SheetPresentationModifier())

@@ -2,12 +2,12 @@
 See LICENSE folder for this sample’s licensing information.
 
 Abstract:
-View for recognizing barcodes.
+The view for recognizing barcodes.
 */
 
 import SwiftUI
 
-/// `BarcodeScanningView` presents UI for recognizing regular one dimensional barcodes.
+/// `BarcodeScanningView` presents the UI for recognizing regular one-dimensional barcodes.
 struct BarcodeScanningView: UIViewControllerRepresentable {
     
     // MARK: - Object lifecycle
@@ -27,6 +27,6 @@ struct BarcodeScanningView: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ viewController: UIViewController, context: Context) {
-        // The underlying view controller does not need to be updated in any way.
+        // The underlying view controller doesn’t need to be updated in any way.
     }
 }

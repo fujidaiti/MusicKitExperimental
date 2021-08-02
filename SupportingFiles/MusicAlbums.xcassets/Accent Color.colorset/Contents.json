@@ -2,15 +2,25 @@
   "colors" : [
     {
       "color" : {
-        "platform" : "ios",
-        "reference" : "systemPinkColor"
+        "color-space" : "extended-srgb",
+        "components" : {
+          "alpha" : "1.000",
+          "blue" : "0.333",
+          "green" : "0.176",
+          "red" : "1.000"
+        }
       },
       "idiom" : "iphone"
     },
     {
       "color" : {
-        "platform" : "ios",
-        "reference" : "systemPinkColor"
+        "color-space" : "extended-srgb",
+        "components" : {
+          "alpha" : "1.000",
+          "blue" : "0.333",
+          "green" : "0.176",
+          "red" : "1.000"
+        }
       },
       "idiom" : "ipad"
     }

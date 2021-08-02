@@ -2,7 +2,7 @@
 See LICENSE folder for this sample’s licensing information.
 
 Abstract:
-Entry point for the app.
+The entry point for the app.
 */
 
 import MusicKit
@@ -14,14 +14,14 @@ struct MusicAlbumsApp: App {
     
     // MARK: - Object lifecycle
     
-    /// Configures the app when it is launched.
+    /// Configures the app when it launches.
     init() {
         adjustVisualAppearance()
     }
     
     // MARK: - App
     
-    /// The app's root view.
+    /// The app’s root view.
     var body: some Scene {
         WindowGroup {
             ContentView()

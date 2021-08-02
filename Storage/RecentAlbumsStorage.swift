@@ -26,7 +26,7 @@ class RecentAlbumsStorage: ObservableObject {
     /// The `UserDefaults` key for persisting recently viewed album identifiers.
     private let recentlyViewedAlbumIdentifiersKey = "recently-viewed-albums-identifiers"
     
-    /// The maximum number of recently viewed albums that may be persisted to `UserDefaults`.
+    /// The maximum number of recently viewed albums that the storage object can persist to `UserDefaults`.
     private let maximumNumberOfRecentlyViewedAlbums = 10
     
     /// Retrieves recently viewed album identifiers from `UserDefaults`.
@@ -88,7 +88,7 @@ class RecentAlbumsStorage: ObservableObject {
         if recentlyViewedAlbumIDs.isEmpty {
             self.recentlyViewedAlbums = []
         } else {
-            detach {
+            Task {
                 do {
                     let albumsRequest = MusicCatalogResourceRequest<Album>(matching: \.id, memberOf: recentlyViewedAlbumIDs)
                     let albumsResponse = try await albumsRequest.response()

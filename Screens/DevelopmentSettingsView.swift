@@ -2,18 +2,20 @@
 See LICENSE folder for this sample’s licensing information.
 
 Abstract:
-Controls for functionality that might be hidden temporarily.
+Controls for functionality that the app might hide temporarily.
 */
 
 import SwiftUI
 
 /// DevelopmentSettingsView is a view that offers controls for hidden settings.
-/// This is meant as a developer only tool, to temporarily hide certain key features of the app.
+/// This is a developer-only tool to temporarily hide certain key features of the app.
 struct DevelopmentSettingsView: View {
     
     // MARK: - Properties
     
-    /// `true` if barcode scanning should be shown in the UI, persisted in `UserDefaults`.
+    /// `true` if the app needs to display a button that presents the barcode scanning view.
+    ///
+    /// The view persists this Boolean value in `UserDefaults`.
     @AppStorage("barcode-scanning-available") var isBarcodeScanningAvailable = true
     
     // MARK: - View

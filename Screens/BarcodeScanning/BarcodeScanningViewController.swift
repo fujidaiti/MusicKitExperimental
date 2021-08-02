@@ -2,15 +2,15 @@
 See LICENSE folder for this sample’s licensing information.
 
 Abstract:
-View controller for recognizing barcodes.
+The view controller for recognizing barcodes.
 */
 
 import AVFoundation
 import SwiftUI
 import UIKit
 
-/// `BarcodeScanningViewController` is a view controller that can be used to recognize regular one dimensional barcodes.
-/// This is accomplished using `AVCaptureSession` and `AVCaptureVideoPreviewLayer`.
+/// `BarcodeScanningViewController` is a view controller for recognizing regular one-dimensional barcodes.
+/// This view controller accomplishes this using `AVCaptureSession` and `AVCaptureVideoPreviewLayer`.
 class BarcodeScanningViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
     
     // MARK: - Object lifecycle
@@ -26,13 +26,13 @@ class BarcodeScanningViewController: UIViewController, AVCaptureMetadataOutputOb
     
     // MARK: - Properties
     
-    /// A barcode string scanned via the barcode scanning view.
+    /// A barcode string that the barcode scanning view detects.
     @Binding var detectedBarcode: String
     
-    /// A capture session used to enable the camera.
+    /// A capture session for enabling the camera.
     private var captureSession: AVCaptureSession?
     
-    /// The capture session's preview content.
+    /// The capture session’s preview content.
     private var previewLayer: AVCaptureVideoPreviewLayer?
     
     // MARK: - View lifecycle
@@ -109,7 +109,7 @@ class BarcodeScanningViewController: UIViewController, AVCaptureMetadataOutputOb
     
     // MARK: - Capture metadata output objects delegate
     
-    /// Captures a barcode string, if found in the current capture session.
+    /// Captures a barcode string, if there is one in the current capture session.
     func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
         self.captureSession?.stopRunning()
         
@@ -120,7 +120,7 @@ class BarcodeScanningViewController: UIViewController, AVCaptureMetadataOutputOb
             let readableObject = previewLayer.transformedMetadataObject(for: metadataObject) as? AVMetadataMachineReadableCodeObject,
             let detectedBarcode = readableObject.stringValue {
             
-            // Provide haptic feedback when a barcode is recognized.
+            // Provide haptic feedback when the barcode scanning view controller detects a barcode.
             AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
             
             // Display the recognized barcode string as UI feedback.
