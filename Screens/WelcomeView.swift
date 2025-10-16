@@ -138,7 +138,7 @@ struct WelcomeView: View {
             case .notDetermined:
                 Task {
                     let musicAuthorizationStatus = await MusicAuthorization.request()
-                    await update(with: musicAuthorizationStatus)
+                    update(with: musicAuthorizationStatus)
                 }
             case .denied:
                 if let settingsURL = URL(string: UIApplication.openSettingsURLString) {

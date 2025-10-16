@@ -1,6 +1,7 @@
 # Using MusicKit to Integrate with Apple Music
 
 Find an album in Apple Music that corresponds to a CD in a user's collection, and present the information for the album.
+This is an example app of using MusicKit.
 
 ## Overview
 

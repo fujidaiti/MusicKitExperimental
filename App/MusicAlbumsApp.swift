@@ -1,14 +1,11 @@
 /*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-The entry point for the app.
+MusicKit API検証アプリのエントリポイント
 */
 
 import MusicKit
 import SwiftUI
 
-/// `MusicAlbumsApp` conforms to the SwiftUI `App` protocol, and configures the overall appearance of the app.
+/// MusicKit API検証アプリのメインアプリ構造体
 @main
 struct MusicAlbumsApp: App {
     
