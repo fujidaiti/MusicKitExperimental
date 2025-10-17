@@ -22,6 +22,10 @@ struct PlayerQueueTestView: View {
     @State private var isLoadingTopSongs = false
     @State private var topSongs: [Song] = []
 
+    // Multi-item removal
+    @State private var showTrackRemovalSheet = false
+    @State private var selectedTracksForRemoval: Set<ApplicationMusicPlayer.Queue.Entry.ID> = []
+
     // Player observables
     @ObservedObject private var playerState = ApplicationMusicPlayer.shared.state
     @ObservedObject private var playerQueue = ApplicationMusicPlayer.shared.queue
@@ -67,6 +71,16 @@ struct PlayerQueueTestView: View {
                 isLoading: isLoadingTopSongs,
                 onConfirm: {
                     insertSelectedSongs()
+                }
+            )
+        }
+        .sheet(isPresented: $showTrackRemovalSheet) {
+            TrackRemovalSheet(
+                queueEntries: Array(playerQueue.entries),
+                currentPlayingEntryID: playerQueue.currentEntry?.id,
+                selectedEntries: $selectedTracksForRemoval,
+                onConfirm: {
+                    removeSelectedTracks()
                 }
             )
         }
@@ -224,6 +238,13 @@ struct PlayerQueueTestView: View {
                 .frame(maxWidth: .infinity)
                 .buttonStyle(.bordered)
                 .disabled(playerQueue.entries.isEmpty)
+
+                Button("Remove Multi Items") {
+                    showRemovalSelectionModal()
+                }
+                .frame(maxWidth: .infinity)
+                .buttonStyle(.bordered)
+                .disabled(playerQueue.entries.count < 2)
 
                 Button("Remove Last 2 Tracks") {
                     removeMultipleTracks()
@@ -575,6 +596,49 @@ struct PlayerQueueTestView: View {
         showSongSelectionSheet = false
     }
 
+    // MARK: - Multi-Item Removal Methods
+
+    private func showRemovalSelectionModal() {
+        selectedTracksForRemoval.removeAll()
+        showTrackRemovalSheet = true
+        addLog("📋 Opened track removal selection")
+    }
+
+    private func removeSelectedTracks() {
+        guard !selectedTracksForRemoval.isEmpty else {
+            addLog("⚠️ No tracks selected for removal")
+            return
+        }
+
+        // Get current playing entry ID to avoid removing it
+        let currentPlayingID = playerQueue.currentEntry?.id
+
+        // Filter out currently playing track from selection (safety check)
+        let safeToRemove = selectedTracksForRemoval.filter { $0 != currentPlayingID }
+
+        guard !safeToRemove.isEmpty else {
+            addLog("⚠️ Cannot remove: only currently playing track was selected")
+            return
+        }
+
+        // Remove selected tracks from queue (in reverse order to maintain indices)
+        let indicesToRemove = playerQueue.entries.enumerated()
+            .filter { safeToRemove.contains($0.element.id) }
+            .map { $0.offset }
+            .sorted(by: >)
+
+        for index in indicesToRemove {
+            playerQueue.entries.remove(at: index)
+        }
+
+        addLog("➖ Removed \(indicesToRemove.count) tracks from queue")
+        addLog("   Remaining tracks: \(playerQueue.entries.count)")
+
+        // Clear selection and close sheet
+        selectedTracksForRemoval.removeAll()
+        showTrackRemovalSheet = false
+    }
+
     // MARK: - Helper Methods
 
     private func addLog(_ message: String) {
@@ -784,6 +848,141 @@ struct SongSelectionRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Track Removal Sheet
+
+struct TrackRemovalSheet: View {
+    let queueEntries: [ApplicationMusicPlayer.Queue.Entry]
+    let currentPlayingEntryID: ApplicationMusicPlayer.Queue.Entry.ID?
+    @Binding var selectedEntries: Set<ApplicationMusicPlayer.Queue.Entry.ID>
+    let onConfirm: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            Group {
+                if queueEntries.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "music.note.list")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("Queue is empty")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    List {
+                        ForEach(queueEntries, id: \.id) { entry in
+                            QueueEntryRow(
+                                entry: entry,
+                                isCurrentlyPlaying: entry.id == currentPlayingEntryID,
+                                isSelected: selectedEntries.contains(entry.id)
+                            ) {
+                                toggleEntrySelection(entry.id)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Remove Tracks")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Confirm") {
+                        onConfirm()
+                    }
+                    .disabled(selectedEntries.isEmpty)
+                }
+            }
+        }
+    }
+
+    private func toggleEntrySelection(_ entryID: ApplicationMusicPlayer.Queue.Entry.ID) {
+        // Prevent selection of currently playing track
+        if entryID == currentPlayingEntryID {
+            return
+        }
+
+        if selectedEntries.contains(entryID) {
+            selectedEntries.remove(entryID)
+        } else {
+            selectedEntries.insert(entryID)
+        }
+    }
+}
+
+struct QueueEntryRow: View {
+    let entry: ApplicationMusicPlayer.Queue.Entry
+    let isCurrentlyPlaying: Bool
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                // Artwork
+                if let artwork = entry.artwork {
+                    ArtworkImage(artwork, width: 50)
+                        .cornerRadius(6)
+                } else {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 50, height: 50)
+                        .cornerRadius(6)
+                }
+
+                // Track info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(entry.title ?? "Unknown Track")
+                        .font(.body)
+                        .foregroundColor(isCurrentlyPlaying ? .secondary : .primary)
+                        .lineLimit(1)
+
+                    if let subtitle = entry.subtitle {
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    // Currently playing indicator
+                    if isCurrentlyPlaying {
+                        Label("Currently Playing", systemImage: "play.fill")
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                    }
+                }
+
+                Spacer()
+
+                // Selection indicator
+                if isCurrentlyPlaying {
+                    Image(systemName: "lock.fill")
+                        .foregroundColor(.secondary)
+                        .font(.title3)
+                } else if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.blue)
+                        .font(.title3)
+                } else {
+                    Image(systemName: "circle")
+                        .foregroundColor(.secondary)
+                        .font(.title3)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isCurrentlyPlaying)
+        .opacity(isCurrentlyPlaying ? 0.5 : 1.0)
     }
 }
 
