@@ -49,10 +49,10 @@ struct PlayerQueueTestView: View {
         .id(queueUpdateTrigger)
         .navigationTitle("Player Queue Operations")
         .navigationBarTitleDisplayMode(.inline)
-        .alert("エラー", isPresented: $showError) {
+        .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "不明なエラー")
+            Text(errorMessage ?? "Unknown error")
         }
     }
 
@@ -60,16 +60,16 @@ struct PlayerQueueTestView: View {
 
     private var searchSection: some View {
         VStack(spacing: 8) {
-            Text("1. アルバムを検索してトラックを取得")
+            Text("1. Search for Album and Load Tracks")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack {
-                TextField("アルバム検索", text: $searchTerm)
+                TextField("Search albums", text: $searchTerm)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
 
-                Button("検索") {
+                Button("Search") {
                     performSearch()
                 }
                 .buttonStyle(.prominent)
@@ -92,11 +92,11 @@ struct PlayerQueueTestView: View {
 
             if !albumTracks.isEmpty {
                 HStack {
-                    Text("取得済みトラック: \(albumTracks.count)曲")
+                    Text("Loaded tracks: \(albumTracks.count)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Spacer()
-                    Button("キューにセット") {
+                    Button("Set Queue") {
                         initializeQueue()
                     }
                     .font(.caption)
@@ -111,14 +111,14 @@ struct PlayerQueueTestView: View {
 
     private var currentPlaybackSection: some View {
         VStack(spacing: 8) {
-            Text("2. 現在の再生状態")
+            Text("2. Current Playback Status")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("再生状態")
+                    Text("Status")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                     Text(playbackStatusText)
@@ -129,7 +129,7 @@ struct PlayerQueueTestView: View {
                 Divider()
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("キュー内のトラック数")
+                    Text("Tracks in Queue")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                     Text("\(playerQueue.entries.count)")
@@ -146,7 +146,7 @@ struct PlayerQueueTestView: View {
             if let currentEntry = playerQueue.currentEntry {
                 CurrentTrackCard(entry: currentEntry)
             } else {
-                Text("再生中のトラックはありません")
+                Text("No track playing")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -158,7 +158,7 @@ struct PlayerQueueTestView: View {
 
     private var queueControlsSection: some View {
         VStack(spacing: 8) {
-            Text("3. キュー操作とプレイバック制御")
+            Text("3. Queue Operations and Playback Control")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -195,21 +195,21 @@ struct PlayerQueueTestView: View {
 
             // Queue manipulation controls
             VStack(spacing: 8) {
-                Button("トラックを位置2に挿入 (Insert at index 2)") {
+                Button("Insert Track at Index 2") {
                     insertTracksAtPosition()
                 }
                 .frame(maxWidth: .infinity)
                 .buttonStyle(.bordered)
                 .disabled(albumTracks.count < 3 || playerQueue.entries.isEmpty)
 
-                Button("最後の2トラックを削除 (Remove last 2 tracks)") {
+                Button("Remove Last 2 Tracks") {
                     removeMultipleTracks()
                 }
                 .frame(maxWidth: .infinity)
                 .buttonStyle(.bordered)
                 .disabled(playerQueue.entries.count < 3)
 
-                Button("キューをクリア (Clear queue)") {
+                Button("Clear Queue") {
                     clearQueue()
                 }
                 .frame(maxWidth: .infinity)
@@ -225,13 +225,13 @@ struct PlayerQueueTestView: View {
 
     private var operationLogsSection: some View {
         VStack(spacing: 8) {
-            Text("4. 操作ログ")
+            Text("4. Operation Logs")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if operationLogs.isEmpty {
-                Text("操作を実行するとログが表示されます")
+                Text("Logs will appear here when operations are executed")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -249,7 +249,7 @@ struct PlayerQueueTestView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 4)
 
-                Button("ログをクリア") {
+                Button("Clear Logs") {
                     operationLogs.removeAll()
                 }
                 .font(.caption)
@@ -266,13 +266,13 @@ struct PlayerQueueTestView: View {
 
     private var playbackStatusText: String {
         switch playerState.playbackStatus {
-        case .playing: return "再生中"
-        case .paused: return "一時停止"
-        case .stopped: return "停止"
-        case .interrupted: return "中断"
-        case .seekingForward: return "早送り中"
-        case .seekingBackward: return "巻き戻し中"
-        @unknown default: return "不明"
+        case .playing: return "Playing"
+        case .paused: return "Paused"
+        case .stopped: return "Stopped"
+        case .interrupted: return "Interrupted"
+        case .seekingForward: return "Seeking Forward"
+        case .seekingBackward: return "Seeking Backward"
+        @unknown default: return "Unknown"
         }
     }
 
@@ -290,13 +290,13 @@ struct PlayerQueueTestView: View {
 
                 await MainActor.run {
                     searchResults = Array(response.albums)
-                    addLog("🔍 検索完了: \(response.albums.count)件のアルバムが見つかりました")
+                    addLog("🔍 Search complete: Found \(response.albums.count) albums")
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "検索に失敗しました: \(error.localizedDescription)"
+                    errorMessage = "Search failed: \(error.localizedDescription)"
                     showError = true
-                    addLog("❌ 検索エラー: \(error.localizedDescription)")
+                    addLog("❌ Search error: \(error.localizedDescription)")
                 }
             }
         }
@@ -313,13 +313,13 @@ struct PlayerQueueTestView: View {
                 await MainActor.run {
                     selectedAlbum = album
                     albumTracks = Array(detailedAlbum.tracks ?? [])
-                    addLog("📀 アルバム '\(album.title)' のトラックを取得: \(albumTracks.count)曲")
+                    addLog("📀 Loaded tracks from '\(album.title)': \(albumTracks.count) tracks")
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "トラック取得に失敗しました: \(error.localizedDescription)"
+                    errorMessage = "Failed to load tracks: \(error.localizedDescription)"
                     showError = true
-                    addLog("❌ トラック取得エラー: \(error.localizedDescription)")
+                    addLog("❌ Track loading error: \(error.localizedDescription)")
                 }
             }
         }
@@ -333,7 +333,7 @@ struct PlayerQueueTestView: View {
             let tracksToQueue = Array(albumTracks.prefix(5))
 
             await MainActor.run {
-                addLog("🔄 キュー設定前: \(player.queue.entries.count)トラック")
+                addLog("🔄 Before queue setup: \(player.queue.entries.count) tracks")
             }
 
             do {
@@ -344,17 +344,17 @@ struct PlayerQueueTestView: View {
                 try await player.prepareToPlay()
 
                 await MainActor.run {
-                    addLog("✅ キューを初期化: \(tracksToQueue.count)トラック")
-                    addLog("   prepareToPlay後: \(player.queue.entries.count)トラック")
-                    addLog("   - トラック: \(tracksToQueue.map { $0.title }.joined(separator: ", "))")
+                    addLog("✅ Queue initialized: \(tracksToQueue.count) tracks")
+                    addLog("   After prepareToPlay: \(player.queue.entries.count) tracks")
+                    addLog("   - Tracks: \(tracksToQueue.map { $0.title }.joined(separator: ", "))")
 
                     // Force UI update
                     queueUpdateTrigger += 1
                 }
             } catch {
                 await MainActor.run {
-                    addLog("❌ キュー初期化エラー: \(error.localizedDescription)")
-                    errorMessage = "キュー初期化に失敗しました: \(error.localizedDescription)"
+                    addLog("❌ Queue initialization error: \(error.localizedDescription)")
+                    errorMessage = "Failed to initialize queue: \(error.localizedDescription)"
                     showError = true
                 }
             }
@@ -368,16 +368,16 @@ struct PlayerQueueTestView: View {
             do {
                 if isPlaying {
                     player.pause()
-                    addLog("⏸️ 一時停止")
+                    addLog("⏸️ Paused")
                 } else {
                     try await player.play()
-                    addLog("▶️ 再生開始")
+                    addLog("▶️ Playing")
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "再生/一時停止に失敗しました: \(error.localizedDescription)"
+                    errorMessage = "Playback failed: \(error.localizedDescription)"
                     showError = true
-                    addLog("❌ 再生エラー: \(error.localizedDescription)")
+                    addLog("❌ Playback error: \(error.localizedDescription)")
                 }
             }
         }
@@ -387,16 +387,16 @@ struct PlayerQueueTestView: View {
         Task {
             do {
                 try await player.skipToNextEntry()
-                addLog("⏭️ 次のトラックにスキップ")
+                addLog("⏭️ Skipped to next track")
 
                 if let currentEntry = playerQueue.currentEntry {
-                    addLog("   現在: \(currentEntry.title ?? "不明")")
+                    addLog("   Current: \(currentEntry.title ?? "Unknown")")
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "次のトラックへのスキップに失敗しました: \(error.localizedDescription)"
+                    errorMessage = "Failed to skip to next track: \(error.localizedDescription)"
                     showError = true
-                    addLog("❌ スキップエラー: \(error.localizedDescription)")
+                    addLog("❌ Skip error: \(error.localizedDescription)")
                 }
             }
         }
@@ -406,16 +406,16 @@ struct PlayerQueueTestView: View {
         Task {
             do {
                 try await player.skipToPreviousEntry()
-                addLog("⏮️ 前のトラックに戻る")
+                addLog("⏮️ Skipped to previous track")
 
                 if let currentEntry = playerQueue.currentEntry {
-                    addLog("   現在: \(currentEntry.title ?? "不明")")
+                    addLog("   Current: \(currentEntry.title ?? "Unknown")")
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "前のトラックへの移動に失敗しました: \(error.localizedDescription)"
+                    errorMessage = "Failed to skip to previous track: \(error.localizedDescription)"
                     showError = true
-                    addLog("❌ 戻るエラー: \(error.localizedDescription)")
+                    addLog("❌ Skip back error: \(error.localizedDescription)")
                 }
             }
         }
@@ -432,7 +432,7 @@ struct PlayerQueueTestView: View {
         let availableTracks = albumTracks.filter { !currentTrackIDs.contains($0.id) }
 
         guard let trackToInsert = availableTracks.first else {
-            addLog("⚠️ 挿入可能なトラックがありません")
+            addLog("⚠️ No available tracks to insert")
             return
         }
 
@@ -442,13 +442,13 @@ struct PlayerQueueTestView: View {
         let entry = ApplicationMusicPlayer.Queue.Entry(trackToInsert)
         playerQueue.entries.insert(entry, at: insertPosition)
 
-        addLog("➕ トラックを位置\(insertPosition)に挿入: \(trackToInsert.title)")
-        addLog("   キュー内トラック数: \(playerQueue.entries.count)")
+        addLog("➕ Inserted track at position \(insertPosition): \(trackToInsert.title)")
+        addLog("   Tracks in queue: \(playerQueue.entries.count)")
 
         // Note about transient entries
         if entry.isTransient {
-            addLog("   ⚠️ エントリーは一時的な状態です (isTransient=true)")
-            addLog("   プレイバックエンジンが解決するまで待機が必要です")
+            addLog("   ⚠️ Entry is transient (isTransient=true)")
+            addLog("   Waiting for playback engine to resolve")
         }
     }
 
@@ -468,13 +468,13 @@ struct PlayerQueueTestView: View {
         }
 
         let countAfter = playerQueue.entries.count
-        addLog("➖ \(countBefore - countAfter)トラックを削除")
-        addLog("   残りトラック数: \(countAfter)")
+        addLog("➖ Removed \(countBefore - countAfter) tracks")
+        addLog("   Remaining tracks: \(countAfter)")
     }
 
     private func clearQueue() {
         player.queue = ApplicationMusicPlayer.Queue([])
-        addLog("🗑️ キューをクリア")
+        addLog("🗑️ Queue cleared")
     }
 
     // MARK: - Helper Methods
@@ -542,7 +542,7 @@ struct CurrentTrackCard: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.title ?? "不明なトラック")
+                Text(entry.title ?? "Unknown Track")
                     .font(.caption)
                     .fontWeight(.medium)
                     .lineLimit(1)
@@ -555,7 +555,7 @@ struct CurrentTrackCard: View {
                 }
 
                 if entry.isTransient {
-                    Label("一時的なエントリー", systemImage: "exclamationmark.triangle.fill")
+                    Label("Transient Entry", systemImage: "exclamationmark.triangle.fill")
                         .font(.system(size: 9))
                         .foregroundColor(.orange)
                 }
