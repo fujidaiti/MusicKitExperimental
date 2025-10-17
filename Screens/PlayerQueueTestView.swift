@@ -23,26 +23,29 @@ struct PlayerQueueTestView: View {
     @State private var operationLogs: [String] = []
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Search section
-            searchSection
+        ScrollView {
+            VStack(spacing: 0) {
+                // Search section
+                searchSection
 
-            Divider()
+                Divider()
 
-            // Current playback info
-            currentPlaybackSection
+                // Current playback info
+                currentPlaybackSection
 
-            Divider()
+                Divider()
 
-            // Queue controls
-            queueControlsSection
+                // Queue controls
+                queueControlsSection
 
-            Divider()
+                Divider()
 
-            // Operation logs
-            operationLogsSection
+                // Operation logs
+                operationLogsSection
+            }
         }
         .navigationTitle("Player Queue Operations")
+        .navigationBarTitleDisplayMode(.inline)
         .alert("エラー", isPresented: $showError) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -53,9 +56,10 @@ struct PlayerQueueTestView: View {
     // MARK: - Search Section
 
     private var searchSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             Text("1. アルバムを検索してトラックを取得")
-                .font(.headline)
+                .font(.subheadline)
+                .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack {
@@ -71,15 +75,16 @@ struct PlayerQueueTestView: View {
 
             if !searchResults.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 8) {
                         ForEach(searchResults, id: \.id) { album in
                             AlbumCard(album: album, isSelected: selectedAlbum?.id == album.id) {
                                 loadAlbumTracks(album)
                             }
                         }
                     }
+                    .padding(.horizontal, 2)
                 }
-                .frame(height: 120)
+                .frame(height: 100)
             }
 
             if !albumTracks.isEmpty {
@@ -102,36 +107,38 @@ struct PlayerQueueTestView: View {
     // MARK: - Current Playback Section
 
     private var currentPlaybackSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             Text("2. 現在の再生状態")
-                .font(.headline)
+                .font(.subheadline)
+                .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text("再生状態")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                     Text(playbackStatusText)
-                        .font(.subheadline)
+                        .font(.caption)
                         .fontWeight(.medium)
                 }
 
                 Divider()
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text("キュー内のトラック数")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                     Text("\(player.queue.entries.count)")
-                        .font(.subheadline)
+                        .font(.caption)
                         .fontWeight(.medium)
                 }
             }
-            .frame(height: 50)
-            .padding()
+            .frame(height: 44)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .background(Color(.systemGray6))
-            .cornerRadius(8)
+            .cornerRadius(6)
 
             if let currentEntry = player.queue.currentEntry {
                 CurrentTrackCard(entry: currentEntry)
@@ -147,13 +154,14 @@ struct PlayerQueueTestView: View {
     // MARK: - Queue Controls Section
 
     private var queueControlsSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             Text("3. キュー操作とプレイバック制御")
-                .font(.headline)
+                .font(.subheadline)
+                .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             // Playback controls
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 Button {
                     skipToPrevious()
                 } label: {
@@ -215,7 +223,8 @@ struct PlayerQueueTestView: View {
     private var operationLogsSection: some View {
         VStack(spacing: 8) {
             Text("4. 操作ログ")
-                .font(.headline)
+                .font(.subheadline)
+                .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if operationLogs.isEmpty {
@@ -223,20 +232,19 @@ struct PlayerQueueTestView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding()
+                    .padding(.vertical, 8)
             } else {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(Array(operationLogs.enumerated()), id: \.offset) { index, log in
-                            Text(log)
-                                .font(.caption)
-                                .foregroundColor(.primary)
-                                .padding(.vertical, 2)
-                        }
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(Array(operationLogs.prefix(10).enumerated()), id: \.offset) { index, log in
+                        Text(log)
+                            .font(.caption2)
+                            .foregroundColor(.primary)
+                            .lineLimit(2)
+                            .padding(.vertical, 1)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxHeight: 150)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 4)
 
                 Button("ログをクリア") {
                     operationLogs.removeAll()
@@ -465,25 +473,25 @@ struct AlbumCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(spacing: 4) {
+            VStack(spacing: 3) {
                 if let artwork = album.artwork {
-                    ArtworkImage(artwork, width: 80)
+                    ArtworkImage(artwork, width: 60)
                         .cornerRadius(4)
                 } else {
                     Rectangle()
                         .fill(Color.gray.opacity(0.3))
-                        .frame(width: 80, height: 80)
+                        .frame(width: 60, height: 60)
                         .cornerRadius(4)
                 }
 
                 Text(album.title)
-                    .font(.caption)
+                    .font(.caption2)
                     .lineLimit(1)
-                    .frame(width: 80)
+                    .frame(width: 60)
             }
-            .padding(4)
+            .padding(3)
             .background(isSelected ? Color.blue.opacity(0.2) : Color.clear)
-            .cornerRadius(8)
+            .cornerRadius(6)
         }
     }
 }
@@ -492,42 +500,42 @@ struct CurrentTrackCard: View {
     let entry: ApplicationMusicPlayer.Queue.Entry
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             if let artwork = entry.artwork {
-                ArtworkImage(artwork, width: 50)
+                ArtworkImage(artwork, width: 40)
                     .cornerRadius(4)
             } else {
                 Rectangle()
                     .fill(Color.gray.opacity(0.3))
-                    .frame(width: 50, height: 50)
+                    .frame(width: 40, height: 40)
                     .cornerRadius(4)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title ?? "不明なトラック")
-                    .font(.subheadline)
+                    .font(.caption)
                     .fontWeight(.medium)
                     .lineLimit(1)
 
                 if let subtitle = entry.subtitle {
                     Text(subtitle)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
 
                 if entry.isTransient {
                     Label("一時的なエントリー", systemImage: "exclamationmark.triangle.fill")
-                        .font(.caption2)
+                        .font(.system(size: 9))
                         .foregroundColor(.orange)
                 }
             }
 
             Spacer()
         }
-        .padding()
+        .padding(8)
         .background(Color(.systemGray6))
-        .cornerRadius(8)
+        .cornerRadius(6)
     }
 }
 
