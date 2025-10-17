@@ -14,9 +14,11 @@ struct PlayerQueueTestView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showError = false
+    @State private var queueUpdateTrigger = 0
 
     // Player observables
     @ObservedObject private var playerState = ApplicationMusicPlayer.shared.state
+    @ObservedObject private var playerQueue = ApplicationMusicPlayer.shared.queue
     private let player = ApplicationMusicPlayer.shared
 
     // Operation logs
@@ -44,6 +46,7 @@ struct PlayerQueueTestView: View {
                 operationLogsSection
             }
         }
+        .id(queueUpdateTrigger)
         .navigationTitle("Player Queue Operations")
         .navigationBarTitleDisplayMode(.inline)
         .alert("エラー", isPresented: $showError) {
@@ -129,7 +132,7 @@ struct PlayerQueueTestView: View {
                     Text("キュー内のトラック数")
                         .font(.caption2)
                         .foregroundColor(.secondary)
-                    Text("\(player.queue.entries.count)")
+                    Text("\(playerQueue.entries.count)")
                         .font(.caption)
                         .fontWeight(.medium)
                 }
@@ -140,7 +143,7 @@ struct PlayerQueueTestView: View {
             .background(Color(.systemGray6))
             .cornerRadius(6)
 
-            if let currentEntry = player.queue.currentEntry {
+            if let currentEntry = playerQueue.currentEntry {
                 CurrentTrackCard(entry: currentEntry)
             } else {
                 Text("再生中のトラックはありません")
@@ -169,7 +172,7 @@ struct PlayerQueueTestView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .disabled(player.queue.entries.isEmpty)
+                .disabled(playerQueue.entries.isEmpty)
 
                 Button {
                     togglePlayPause()
@@ -178,7 +181,7 @@ struct PlayerQueueTestView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(player.queue.entries.isEmpty)
+                .disabled(playerQueue.entries.isEmpty)
 
                 Button {
                     skipToNext()
@@ -187,7 +190,7 @@ struct PlayerQueueTestView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .disabled(player.queue.entries.isEmpty)
+                .disabled(playerQueue.entries.isEmpty)
             }
 
             // Queue manipulation controls
@@ -197,14 +200,14 @@ struct PlayerQueueTestView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .buttonStyle(.bordered)
-                .disabled(albumTracks.count < 3 || player.queue.entries.isEmpty)
+                .disabled(albumTracks.count < 3 || playerQueue.entries.isEmpty)
 
                 Button("最後の2トラックを削除 (Remove last 2 tracks)") {
                     removeMultipleTracks()
                 }
                 .frame(maxWidth: .infinity)
                 .buttonStyle(.bordered)
-                .disabled(player.queue.entries.count < 3)
+                .disabled(playerQueue.entries.count < 3)
 
                 Button("キューをクリア (Clear queue)") {
                     clearQueue()
@@ -212,7 +215,7 @@ struct PlayerQueueTestView: View {
                 .frame(maxWidth: .infinity)
                 .buttonStyle(.bordered)
                 .tint(.red)
-                .disabled(player.queue.entries.isEmpty)
+                .disabled(playerQueue.entries.isEmpty)
             }
         }
         .padding()
@@ -325,14 +328,37 @@ struct PlayerQueueTestView: View {
     private func initializeQueue() {
         guard !albumTracks.isEmpty else { return }
 
-        // Use first 5 tracks or all if less than 5
-        let tracksToQueue = Array(albumTracks.prefix(5))
+        Task {
+            // Use first 5 tracks or all if less than 5
+            let tracksToQueue = Array(albumTracks.prefix(5))
 
-        // Set queue using array literal
-        player.queue = ApplicationMusicPlayer.Queue(for: tracksToQueue, startingAt: nil)
+            await MainActor.run {
+                addLog("🔄 キュー設定前: \(player.queue.entries.count)トラック")
+            }
 
-        addLog("✅ キューを初期化: \(tracksToQueue.count)トラック")
-        addLog("   - トラック: \(tracksToQueue.map { $0.title }.joined(separator: ", "))")
+            do {
+                // Set queue - this is async and entries won't be populated immediately
+                player.queue = ApplicationMusicPlayer.Queue(for: tracksToQueue, startingAt: nil)
+
+                // Prepare the player by calling prepareToPlay - this should populate the queue
+                try await player.prepareToPlay()
+
+                await MainActor.run {
+                    addLog("✅ キューを初期化: \(tracksToQueue.count)トラック")
+                    addLog("   prepareToPlay後: \(player.queue.entries.count)トラック")
+                    addLog("   - トラック: \(tracksToQueue.map { $0.title }.joined(separator: ", "))")
+
+                    // Force UI update
+                    queueUpdateTrigger += 1
+                }
+            } catch {
+                await MainActor.run {
+                    addLog("❌ キュー初期化エラー: \(error.localizedDescription)")
+                    errorMessage = "キュー初期化に失敗しました: \(error.localizedDescription)"
+                    showError = true
+                }
+            }
+        }
     }
 
     // MARK: - Playback Control Methods
@@ -363,7 +389,7 @@ struct PlayerQueueTestView: View {
                 try await player.skipToNextEntry()
                 addLog("⏭️ 次のトラックにスキップ")
 
-                if let currentEntry = player.queue.currentEntry {
+                if let currentEntry = playerQueue.currentEntry {
                     addLog("   現在: \(currentEntry.title ?? "不明")")
                 }
             } catch {
@@ -382,7 +408,7 @@ struct PlayerQueueTestView: View {
                 try await player.skipToPreviousEntry()
                 addLog("⏮️ 前のトラックに戻る")
 
-                if let currentEntry = player.queue.currentEntry {
+                if let currentEntry = playerQueue.currentEntry {
                     addLog("   現在: \(currentEntry.title ?? "不明")")
                 }
             } catch {
@@ -399,10 +425,10 @@ struct PlayerQueueTestView: View {
 
     private func insertTracksAtPosition() {
         guard albumTracks.count >= 3 else { return }
-        guard !player.queue.entries.isEmpty else { return }
+        guard !playerQueue.entries.isEmpty else { return }
 
         // Get tracks that aren't in the current queue
-        let currentTrackIDs = Set(player.queue.entries.compactMap { $0.item?.id })
+        let currentTrackIDs = Set(playerQueue.entries.compactMap { $0.item?.id })
         let availableTracks = albumTracks.filter { !currentTrackIDs.contains($0.id) }
 
         guard let trackToInsert = availableTracks.first else {
@@ -410,14 +436,14 @@ struct PlayerQueueTestView: View {
             return
         }
 
-        let insertPosition = min(2, player.queue.entries.count)
+        let insertPosition = min(2, playerQueue.entries.count)
 
         // Insert track at position
         let entry = ApplicationMusicPlayer.Queue.Entry(trackToInsert)
-        player.queue.entries.insert(entry, at: insertPosition)
+        playerQueue.entries.insert(entry, at: insertPosition)
 
         addLog("➕ トラックを位置\(insertPosition)に挿入: \(trackToInsert.title)")
-        addLog("   キュー内トラック数: \(player.queue.entries.count)")
+        addLog("   キュー内トラック数: \(playerQueue.entries.count)")
 
         // Note about transient entries
         if entry.isTransient {
@@ -427,21 +453,21 @@ struct PlayerQueueTestView: View {
     }
 
     private func removeMultipleTracks() {
-        guard player.queue.entries.count >= 3 else { return }
+        guard playerQueue.entries.count >= 3 else { return }
 
-        let countBefore = player.queue.entries.count
+        let countBefore = playerQueue.entries.count
 
         // Remove last 2 entries
-        let removeCount = min(2, player.queue.entries.count - 1) // Keep at least 1 track
+        let removeCount = min(2, playerQueue.entries.count - 1) // Keep at least 1 track
 
         for _ in 0..<removeCount {
-            let lastIndex = player.queue.entries.count - 1
+            let lastIndex = playerQueue.entries.count - 1
             if lastIndex > 0 { // Don't remove if it's the only/currently playing track
-                player.queue.entries.remove(at: lastIndex)
+                playerQueue.entries.remove(at: lastIndex)
             }
         }
 
-        let countAfter = player.queue.entries.count
+        let countAfter = playerQueue.entries.count
         addLog("➖ \(countBefore - countAfter)トラックを削除")
         addLog("   残りトラック数: \(countAfter)")
     }
@@ -455,7 +481,11 @@ struct PlayerQueueTestView: View {
 
     private func addLog(_ message: String) {
         let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
-        operationLogs.insert("[\(timestamp)] \(message)", at: 0)
+        let logMessage = "[\(timestamp)] \(message)"
+        operationLogs.insert(logMessage, at: 0)
+
+        // Also print to console
+        print("🎵 PlayerQueue: \(logMessage)")
 
         // Keep only last 50 logs
         if operationLogs.count > 50 {
