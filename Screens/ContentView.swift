@@ -9,7 +9,8 @@ struct ContentView: View {
     let testItems = [
         TestItem(id: 1, title: "キーワード検索API", description: "MusicCatalogSearchRequestを使用したカタログ検索"),
         TestItem(id: 2, title: "ID逆引きAPI（Album一括）", description: "複数AlbumIDからMusicCatalogResourceRequestで一括取得"),
-        TestItem(id: 3, title: "混合種別ID一括逆引きAPI", description: "Apple Music HTTP APIで複数種別（Album/Song/Artist）ID一括取得")
+        TestItem(id: 3, title: "混合種別ID一括逆引きAPI", description: "Apple Music HTTP APIで複数種別（Album/Song/Artist）ID一括取得"),
+        TestItem(id: 4, title: "Player キュー操作", description: "ApplicationMusicPlayerのキュー操作とプレイバック制御")
     ]
     
     var body: some View {
@@ -40,6 +41,8 @@ struct ContentView: View {
             SearchWithSelectionView()
         case 3:
             MixedTypeSearchView()
+        case 4:
+            PlayerQueueTestView()
         default:
             Text("未実装")
         }
