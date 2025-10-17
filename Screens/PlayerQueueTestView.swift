@@ -16,6 +16,12 @@ struct PlayerQueueTestView: View {
     @State private var showError = false
     @State private var queueUpdateTrigger = 0
 
+    // Multi-item insertion
+    @State private var showSongSelectionSheet = false
+    @State private var selectedSongs: Set<Track.ID> = []
+    @State private var isLoadingTopSongs = false
+    @State private var topSongs: [Song] = []
+
     // Player observables
     @ObservedObject private var playerState = ApplicationMusicPlayer.shared.state
     @ObservedObject private var playerQueue = ApplicationMusicPlayer.shared.queue
@@ -53,6 +59,16 @@ struct PlayerQueueTestView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "Unknown error")
+        }
+        .sheet(isPresented: $showSongSelectionSheet) {
+            SongSelectionSheet(
+                songs: topSongs,
+                selectedSongs: $selectedSongs,
+                isLoading: isLoadingTopSongs,
+                onConfirm: {
+                    insertSelectedSongs()
+                }
+            )
         }
     }
 
@@ -201,6 +217,13 @@ struct PlayerQueueTestView: View {
                 .frame(maxWidth: .infinity)
                 .buttonStyle(.bordered)
                 .disabled(albumTracks.count < 3 || playerQueue.entries.isEmpty)
+
+                Button("Insert Multi Items") {
+                    showSongSelectionModal()
+                }
+                .frame(maxWidth: .infinity)
+                .buttonStyle(.bordered)
+                .disabled(playerQueue.entries.isEmpty)
 
                 Button("Remove Last 2 Tracks") {
                     removeMultipleTracks()
@@ -477,6 +500,81 @@ struct PlayerQueueTestView: View {
         addLog("🗑️ Queue cleared")
     }
 
+    // MARK: - Multi-Item Insertion Methods
+
+    private func showSongSelectionModal() {
+        selectedSongs.removeAll()
+        showSongSelectionSheet = true
+        loadTopSongs()
+    }
+
+    private func loadTopSongs() {
+        Task {
+            isLoadingTopSongs = true
+            defer { isLoadingTopSongs = false }
+
+            do {
+                // Search for popular songs
+                var searchRequest = MusicCatalogSearchRequest(term: "popular", types: [Song.self])
+                searchRequest.limit = 25
+                let response = try await searchRequest.response()
+
+                await MainActor.run {
+                    topSongs = Array(response.songs)
+                    addLog("🎵 Loaded \(topSongs.count) songs for selection")
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to load songs: \(error.localizedDescription)"
+                    showError = true
+                    addLog("❌ Song loading error: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func insertSelectedSongs() {
+        guard !selectedSongs.isEmpty else {
+            addLog("⚠️ No songs selected")
+            return
+        }
+
+        guard !playerQueue.entries.isEmpty else {
+            addLog("⚠️ Queue is empty, cannot insert after current track")
+            return
+        }
+
+        // Get the selected songs in order
+        let songsToInsert = topSongs.filter { selectedSongs.contains($0.id) }
+
+        // Find current track position
+        guard let currentEntry = playerQueue.currentEntry,
+              let currentIndex = playerQueue.entries.firstIndex(where: { $0.id == currentEntry.id }) else {
+            addLog("⚠️ Cannot find current track position")
+            return
+        }
+
+        // Insert position is right after current track
+        let insertPosition = currentIndex + 1
+
+        // Insert songs one by one
+        for (offset, song) in songsToInsert.enumerated() {
+            let entry = ApplicationMusicPlayer.Queue.Entry(song)
+            let position = insertPosition + offset
+            if position <= playerQueue.entries.count {
+                playerQueue.entries.insert(entry, at: position)
+            }
+        }
+
+        addLog("➕ Inserted \(songsToInsert.count) songs after current track")
+        addLog("   Position: \(insertPosition)")
+        addLog("   Songs: \(songsToInsert.map { $0.title }.joined(separator: ", "))")
+
+        // Clear selection and close sheet
+        selectedSongs.removeAll()
+        showSongSelectionSheet = false
+    }
+
     // MARK: - Helper Methods
 
     private func addLog(_ message: String) {
@@ -566,6 +664,126 @@ struct CurrentTrackCard: View {
         .padding(8)
         .background(Color(.systemGray6))
         .cornerRadius(6)
+    }
+}
+
+// MARK: - Song Selection Sheet
+
+struct SongSelectionSheet: View {
+    let songs: [Song]
+    @Binding var selectedSongs: Set<Track.ID>
+    let isLoading: Bool
+    let onConfirm: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            Group {
+                if isLoading {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Loading songs...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else if songs.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "music.note.list")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("No songs available")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    List {
+                        ForEach(songs, id: \.id) { song in
+                            SongSelectionRow(
+                                song: song,
+                                isSelected: selectedSongs.contains(song.id)
+                            ) {
+                                toggleSongSelection(song.id)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Select Songs")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Confirm") {
+                        onConfirm()
+                    }
+                    .disabled(selectedSongs.isEmpty)
+                }
+            }
+        }
+    }
+
+    private func toggleSongSelection(_ songID: Track.ID) {
+        if selectedSongs.contains(songID) {
+            selectedSongs.remove(songID)
+        } else {
+            selectedSongs.insert(songID)
+        }
+    }
+}
+
+struct SongSelectionRow: View {
+    let song: Song
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                // Artwork
+                if let artwork = song.artwork {
+                    ArtworkImage(artwork, width: 50)
+                        .cornerRadius(6)
+                } else {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 50, height: 50)
+                        .cornerRadius(6)
+                }
+
+                // Song info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(song.title)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+
+                    Text(song.artistName)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                // Selection indicator
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.blue)
+                        .font(.title3)
+                } else {
+                    Image(systemName: "circle")
+                        .foregroundColor(.secondary)
+                        .font(.title3)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
