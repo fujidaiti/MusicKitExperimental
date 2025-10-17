@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		056D1F062EA27F97008A8449 /* SystemMusicPlayerObserverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 056D1F052EA27F97008A8449 /* SystemMusicPlayerObserverView.swift */; };
 		059A20672E49F82900D6D83F /* MusicAlbumsShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 059A205D2E49F82900D6D83F /* MusicAlbumsShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		05A5416D2EA15BFE00B0E70B /* MusicPlayerAPI.md in Resources */ = {isa = PBXBuildFile; fileRef = 05A5416C2EA15BF200B0E70B /* MusicPlayerAPI.md */; };
 		5D16E1BE2637FB69000AD556 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D16E1BA2637FB69000AD556 /* WelcomeView.swift */; };
@@ -21,9 +22,9 @@
 		5D16E209263A1F7400D545CA /* MixedTypeSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D16E20A263A1F7400D545CA /* MixedTypeSearchView.swift */; };
 		5D16E20B263A1F7400D545CA /* SelectableMixedItemCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D16E20C263A1F7400D545CA /* SelectableMixedItemCell.swift */; };
 		5D16E20D263A1F7400D545CA /* HTTPReverseSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D16E20E263A1F7400D545CA /* HTTPReverseSearchView.swift */; };
-		C707BA52FB4F4F69ABF3C6AB /* PlayerQueueTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F4F2E6CB6440F887098065 /* PlayerQueueTestView.swift */; };
 		5D56E895262785FA008415EB /* MusicAlbums.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5D56E894262785FA008415EB /* MusicAlbums.xcassets */; };
 		5D56E89626278761008415EB /* MusicAlbums-Preview.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5D56E892262785E9008415EB /* MusicAlbums-Preview.xcassets */; };
+		C707BA52FB4F4F69ABF3C6AB /* PlayerQueueTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F4F2E6CB6440F887098065 /* PlayerQueueTestView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +52,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		056D1F052EA27F97008A8449 /* SystemMusicPlayerObserverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMusicPlayerObserverView.swift; sourceTree = "<group>"; };
 		059A205D2E49F82900D6D83F /* MusicAlbumsShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MusicAlbumsShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		059A206F2E4A476200D6D83F /* MusicAlbums.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MusicAlbums.entitlements; sourceTree = "<group>"; };
 		05A5416C2EA15BF200B0E70B /* MusicPlayerAPI.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MusicPlayerAPI.md; sourceTree = "<group>"; };
@@ -66,11 +68,11 @@
 		5D16E20A263A1F7400D545CA /* MixedTypeSearchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MixedTypeSearchView.swift; sourceTree = "<group>"; };
 		5D16E20C263A1F7400D545CA /* SelectableMixedItemCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectableMixedItemCell.swift; sourceTree = "<group>"; };
 		5D16E20E263A1F7400D545CA /* HTTPReverseSearchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPReverseSearchView.swift; sourceTree = "<group>"; };
-		83F4F2E6CB6440F887098065 /* PlayerQueueTestView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerQueueTestView.swift; sourceTree = "<group>"; };
 		5D56E87A26278461008415EB /* MusicAlbums.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MusicAlbums.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D56E892262785E9008415EB /* MusicAlbums-Preview.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "MusicAlbums-Preview.xcassets"; sourceTree = "<group>"; };
 		5D56E894262785FA008415EB /* MusicAlbums.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = MusicAlbums.xcassets; sourceTree = "<group>"; };
 		5DAD5337262801020005FFA1 /* MusicAlbums-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "MusicAlbums-Info.plist"; sourceTree = "<group>"; };
+		83F4F2E6CB6440F887098065 /* PlayerQueueTestView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerQueueTestView.swift; sourceTree = "<group>"; };
 		956B049B4C0371C8B0E18BDE /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		C60BA1391DF0B65059A478D5 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 		D6328558768CDFB990C0BEB1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -129,6 +131,7 @@
 			children = (
 				5D16E1BA2637FB69000AD556 /* WelcomeView.swift */,
 				5D16E1BC2637FB69000AD556 /* ContentView.swift */,
+				056D1F052EA27F97008A8449 /* SystemMusicPlayerObserverView.swift */,
 				5D16E1FF263A1E6400D545CA /* SearchTestView.swift */,
 				5D16E202263A1E6400D545CA /* SearchWithSelectionView.swift */,
 				5D16E204263A1E6400D545CA /* SelectableAlbumCell.swift */,
@@ -322,6 +325,7 @@
 				5D16E1BF2637FB69000AD556 /* ContentView.swift in Sources */,
 				5D16E200263A1E6400D545CA /* SearchTestView.swift in Sources */,
 				5D16E201263A1E6400D545CA /* SearchWithSelectionView.swift in Sources */,
+				056D1F062EA27F97008A8449 /* SystemMusicPlayerObserverView.swift in Sources */,
 				5D16E203263A1E6400D545CA /* SelectableAlbumCell.swift in Sources */,
 				5D16E205263A1E6400D545CA /* ReverseSearchView.swift in Sources */,
 				5D16E207263A1F7400D545CA /* AppleMusicHTTPClient.swift in Sources */,
