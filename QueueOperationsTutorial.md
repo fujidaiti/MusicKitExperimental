@@ -8,6 +8,7 @@ This tutorial explains how to perform common queue and playback operations using
 - [Starting Playback](#starting-playback)
 - [Basic Playback Controls](#basic-playback-controls)
 - [Queue Manipulation](#queue-manipulation)
+- [Observing System Music App State](#observing-system-music-app-state)
 
 ---
 
@@ -266,6 +267,183 @@ for index in indicesToRemove {
 
 ```swift
 player.queue = ApplicationMusicPlayer.Queue([])
+```
+
+---
+
+## Observing System Music App State
+
+If you want to observe what's currently playing in the system Music app without controlling it, use `SystemMusicPlayer`. This is useful for displaying "Now Playing" information or monitoring playback state.
+
+**API:** `SystemMusicPlayer.shared`
+
+### Key Differences from ApplicationMusicPlayer
+
+| Feature | ApplicationMusicPlayer | SystemMusicPlayer |
+|---------|------------------------|-------------------|
+| Queue Access | `queue.entries` available | `queue.entries` **not available** |
+| Current Entry | ✅ Available | ✅ Available |
+| Playback Time | ✅ Available | ✅ Available |
+| Controls Music App | ❌ No | ✅ Yes |
+
+### Observing Playback State
+
+**API:**
+- `SystemMusicPlayer.shared.state` - Observes playback status
+- `SystemMusicPlayer.shared.queue.currentEntry` - Access currently playing track
+- `SystemMusicPlayer.shared.playbackTime` - Get current playback time
+
+```swift
+struct SystemPlayerObserverView: View {
+    // Observe player state
+    @ObservedObject private var playerState = SystemMusicPlayer.shared.state
+    private let player = SystemMusicPlayer.shared
+
+    // Store current entry and time in State
+    @State private var currentEntry: MusicPlayer.Queue.Entry?
+    @State private var currentTime: TimeInterval = 0
+    @State private var timer: Timer?
+
+    var body: some View {
+        VStack {
+            // Display playback status
+            Text("Status: \(playbackStatusText)")
+
+            // Display currently playing track
+            if let entry = currentEntry {
+                Text("Now Playing: \(entry.title)")
+
+                if let subtitle = entry.subtitle {
+                    Text(subtitle)
+                        .font(.caption)
+                }
+            }
+
+            // Display playback time
+            Text("Time: \(formatTime(currentTime))")
+        }
+        .onAppear {
+            startTimer()
+        }
+        .onDisappear {
+            stopTimer()
+        }
+    }
+
+    private var playbackStatusText: String {
+        switch playerState.playbackStatus {
+        case .playing: return "Playing"
+        case .paused: return "Paused"
+        case .stopped: return "Stopped"
+        default: return "Unknown"
+        }
+    }
+
+    private func formatTime(_ timeInterval: TimeInterval) -> String {
+        let minutes = Int(timeInterval) / 60
+        let seconds = Int(timeInterval) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    private func startTimer() {
+        // Update immediately
+        currentTime = player.playbackTime
+        currentEntry = player.queue.currentEntry
+
+        // Create timer to update every 0.5 seconds
+        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+            currentTime = player.playbackTime
+            currentEntry = player.queue.currentEntry
+        }
+    }
+
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+}
+```
+
+### Accessing Current Playback Information
+
+**Get current playback time:**
+
+```swift
+let currentTime = SystemMusicPlayer.shared.playbackTime
+print("Current time: \(currentTime) seconds")
+```
+
+**Get currently playing track:**
+
+```swift
+if let currentEntry = SystemMusicPlayer.shared.queue.currentEntry {
+    print("Title: \(currentEntry.title)")
+
+    if let subtitle = currentEntry.subtitle {
+        print("Artist: \(subtitle)")
+    }
+
+    if let artwork = currentEntry.artwork {
+        // Display artwork
+    }
+}
+```
+
+**Check playback status:**
+
+```swift
+let status = SystemMusicPlayer.shared.state.playbackStatus
+
+switch status {
+case .playing:
+    print("Music is playing")
+case .paused:
+    print("Music is paused")
+case .stopped:
+    print("Music is stopped")
+default:
+    print("Other status")
+}
+```
+
+### Important Limitations
+
+**SystemMusicPlayer does NOT provide access to the full queue:**
+
+```swift
+// ❌ This does NOT work with SystemMusicPlayer
+// let entries = SystemMusicPlayer.shared.queue.entries  // Property not available
+
+// ✅ Only currentEntry is available
+let currentEntry = SystemMusicPlayer.shared.queue.currentEntry
+```
+
+If you need access to the full queue, use `ApplicationMusicPlayer` instead.
+
+### Real-Time Updates
+
+For real-time updates of playback time and current entry, use a timer:
+
+```swift
+// Update every 0.5 seconds
+Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+    // Update playback time
+    let time = SystemMusicPlayer.shared.playbackTime
+
+    // Update current entry
+    let entry = SystemMusicPlayer.shared.queue.currentEntry
+
+    // Update your UI
+}
+```
+
+**Remember to invalidate the timer when the view disappears:**
+
+```swift
+.onDisappear {
+    timer?.invalidate()
+    timer = nil
+}
 ```
 
 ---
